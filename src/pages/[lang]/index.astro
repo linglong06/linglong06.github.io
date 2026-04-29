@@ -1,0 +1,82 @@
+---
+import { getCollection } from "astro:content";
+import { isLanguage, labels, languages } from "../../lib/i18n";
+
+export function getStaticPaths() {
+  return languages.map((lang) => ({ params: { lang } }));
+}
+
+const langParam = Astro.params.lang;
+const lang = isLanguage(langParam) ? langParam : "en";
+const t = labels[lang];
+const posts = (await getCollection("posts"))
+  .filter((post) => post.data.lang === lang)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+const featured = posts.find((post) => post.data.featured) ?? posts[0];
+const regularPosts = posts.filter((post) => post.id !== featured?.id);
+const otherLang = t.otherLangCode;
+---
+
+<html lang={t.htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={t.description} />
+    <title>{t.title}</title>
+    <link rel="stylesheet" href="/styles/global.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href={`/${lang}/`}>SleepLemon</a>
+      <nav aria-label="Main navigation">
+        <a href={`/${lang}/blog`}>{t.guides}</a>
+        <a href={`/${lang}/disclosure`}>{t.disclosure}</a>
+        <a class="language-switch" href={`/${otherLang}/`}>{t.otherLang}</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">{t.heroEyebrow}</p>
+          <h1>{t.heroTitle}</h1>
+          <p class="intro">{t.heroIntro}</p>
+        </div>
+        <aside class="notice">
+          <strong>{t.affiliateTitle}</strong>
+          <span>{t.editorialNote}</span>
+        </aside>
+      </section>
+
+      {featured && (
+        <section class="featured">
+          <p class="eyebrow">{featured.data.category}</p>
+          <h2>{featured.data.title}</h2>
+          <p>{featured.data.description}</p>
+          <a class="button" href={`/${lang}/blog/${featured.slug}`}>{t.readGuide}</a>
+        </section>
+      )}
+
+      <section class="post-list" aria-label={t.latest}>
+        <div class="section-heading">
+          <p class="eyebrow">{t.latest}</p>
+          <h2>{t.buyingGuides}</h2>
+        </div>
+        <div class="grid">
+          {regularPosts.map((post) => (
+            <article class="post-card">
+              <p class="eyebrow">{post.data.category}</p>
+              <h3><a href={`/${lang}/blog/${post.slug}`}>{post.data.title}</a></h3>
+              <p>{post.data.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <span>© {new Date().getFullYear()} SleepLemon</span>
+      <a href={`/${lang}/disclosure`}>{t.footerDisclosure}</a>
+    </footer>
+  </body>
+</html>

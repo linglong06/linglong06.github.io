@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.astro/
+.vite/
+.stitch-mcp/
+.DS_Store
+.env
+
+# Legacy local prototypes, not part of the deployed Astro site.
+/assets/
+/index.html
+/screen2.html
